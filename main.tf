@@ -1,44 +1,38 @@
-# Ensure GOOGLE_APPLICATION_CREDENTIALS environment variable is set
+locals {
 
-/*
+  # Port on which Vault runs
+  vault_port = "8200"
 
-# Cannot use this block at present, module can't depend on it
+  # Port to use for vault health check http endpoint. Only accessible from Google health check addresses.
+  health_check_port = "8300"
 
+  # CIDR range for the subnet
+  subnet_cidr_range = "10.1.0.0/20"
+
+  # Base OS image to use on Vault VM
+  vault_instance_base_image = "debian-cloud/debian-10"
+
+  # URL for LB health check - uninitialised vault can accept traffic, standbys cannot
+  hc_workload_request_path = "/v1/sys/health?uninitcode=200"
+
+  # URL for autoheal health check - uninitialised vault is health as are standbys
+  hc_autoheal_request_path = "/v1/sys/health?uninitcode=200&standbyok=true"
+}
+
+
+# Ensure GOOGLE_APPLICATION_CREDENTIALS environment variable points to the location of a SA key json file
 provider "google" {
   project = var.project_id
   region  = var.region
 }
 
-# Ensure compute API is enabled
-resource "google_project_service" "compute_api" {
-  project                    = var.project_id
-  service                    = "compute.googleapis.com"
-  disable_dependent_services = true
-  disable_on_destroy         = false
-}
-*/
 
-# Go for it!
-module "vault" {
-  source  = "terraform-google-modules/vault/google"
-  version = "5.3.0"
 
-  project_id = var.project_id
-  region     = var.region
-
-  storage_bucket_class    = "MULTI_REGIONAL"
-  storage_bucket_location = "eu"
-
-  # manage_tls = true # TODO: manage TLS
-  # network  ="" # TODO: create own network
-  # vault_allowed_cidrs =[ "0.0.0.0/0" ] # TODO: restrict access to vault to desktop IP
-
-  allow_ssh                    = false # Best practice to disable SSH access
-  storage_bucket_force_destroy = true  # This is only a demo so remove data on destroy to save ££
-  vault_version                = "1.6.0"
+# Enable required services on the project
+resource "google_project_service" "service" {
+  for_each           = var.project_services
+  project            = var.project_id
+  service            = each.key
+  disable_on_destroy = false
 }
 
-
-output "vault_addr" {
-  value = module.vault.vault_addr
-}
