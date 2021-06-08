@@ -37,13 +37,6 @@ resource "tls_self_signed_cert" "root" {
   allowed_uses = ["cert_signing"]
 }
 
-# Save the root CA locally for TLS verification
-resource "local_file" "root" {
-  filename = "ca.crt"
-  content  = tls_self_signed_cert.root.cert_pem
-}
-
-
 
 ###########################
 # Server cert

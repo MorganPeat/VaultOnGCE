@@ -6,6 +6,8 @@ resource "google_kms_key_ring" "vault" {
   name     = "vault"
   location = var.region
   project  = var.project_id
+
+  depends_on = [google_project_service.service]
 }
 
 resource "google_kms_crypto_key" "vault_init" {

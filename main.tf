@@ -15,7 +15,7 @@ locals {
   # URL for LB health check - uninitialised vault can accept traffic, standbys cannot
   hc_workload_request_path = "/v1/sys/health?uninitcode=200"
 
-  # URL for autoheal health check - uninitialised vault is health as are standbys
+  # URL for autoheal health check - uninitialised vault is healthy as are standbys
   hc_autoheal_request_path = "/v1/sys/health?uninitcode=200&standbyok=true"
 }
 
