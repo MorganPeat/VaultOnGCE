@@ -64,7 +64,7 @@ build {
     source      = "./configure_vault.sh"
     destination = "/tmp/configure_vault.sh"
   }
-  
+
   provisioner "shell" {
     environment_vars = [
       "VAULT_VERSION=${var.vault_version}",

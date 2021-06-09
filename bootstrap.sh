@@ -36,12 +36,12 @@ gcloud auth activate-service-account --key-file=key.json
 EXTERNAL_IP="$(curl -s http://whatismyip.akamai.com/)"
 
 # Set terraform variables
-cat > ./terraform.tfvars <<EOF
+cat > ./bootstrap/terraform.tfvars <<EOF
 project_id             = "${PROJECT_ID}"
 allowed_external_cidrs = ["${EXTERNAL_IP}/32"]
 EOF
 
-cat > ../terraform.tfvars <<EOF
+cat > ./vault/terraform.tfvars <<EOF
 project_id                = "${PROJECT_ID}"
 allowed_external_cidrs    = ["${EXTERNAL_IP}/32"]
 vault_instance_base_image = "insert_image_name_here"
@@ -49,13 +49,14 @@ EOF
 
 
 # Bootstrap the project using terraform
+pushd bootstrap
 terraform init
 terraform apply -auto-approve
-
+SUBNETWORK="$(terraform output -raw packer_subnetwork)"
+popd
 
 # Configure packer parameters
-SUBNETWORK="$(terraform output -raw packer_subnetwork)"
-cat > ../packer/vault.auto.pkrvars.hcl <<EOF
+cat > ./packer/vault.auto.pkrvars.hcl <<EOF
 project_id = "${PROJECT_ID}"
 subnetwork = "${SUBNETWORK}"
 EOF

@@ -17,3 +17,12 @@ fi
 
 gcloud projects delete $PROJECT_ID --quiet
 gcloud beta billing projects unlink "${PROJECT_ID}"
+
+
+# Tidy up
+rm ./key.json
+rm ./bootstrap/terraform.tfstate*
+rm ./bootstrap/terraform.tfvars
+rm ./packer/vault.auto.pkrvars.hcl
+rm ./vault/terraform.tfstate*
+rm ./vault/terraform.tfvars
