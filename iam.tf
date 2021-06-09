@@ -19,8 +19,6 @@ resource "google_service_account" "vault_admin" {
   account_id   = "vault-admin"
   display_name = "Vault Admin"
   project      = var.project_id
-
-  depends_on = [google_project_service.service]
 }
 
 # Give project-level IAM permissions to the service account.

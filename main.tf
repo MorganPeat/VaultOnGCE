@@ -9,9 +9,6 @@ locals {
   # CIDR range for the subnet
   subnet_cidr_range = "10.1.0.0/20"
 
-  # Base OS image to use on Vault VM
-  vault_instance_base_image = "debian-cloud/debian-10"
-
   # URL for LB health check - uninitialised vault can accept traffic, standbys cannot
   hc_workload_request_path = "/v1/sys/health?uninitcode=200"
 
@@ -25,14 +22,3 @@ provider "google" {
   project = var.project_id
   region  = var.region
 }
-
-
-
-# Enable required services on the project
-resource "google_project_service" "service" {
-  for_each           = var.project_services
-  project            = var.project_id
-  service            = each.key
-  disable_on_destroy = false
-}
-

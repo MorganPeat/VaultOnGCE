@@ -37,6 +37,10 @@ resource "tls_self_signed_cert" "root" {
   allowed_uses = ["cert_signing"]
 }
 
+resource "local_file" "root" {
+  content  = tls_self_signed_cert.root.cert_pem
+  filename = "ca.crt"
+}
 
 ###########################
 # Server cert

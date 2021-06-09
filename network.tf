@@ -12,8 +12,6 @@ resource "google_compute_network" "vault_network" {
   name                    = "vault-network"
   project                 = var.project_id
   auto_create_subnetworks = false
-
-  depends_on = [google_project_service.service]
 }
 
 resource "google_compute_subnetwork" "vault_subnet" {
@@ -44,10 +42,8 @@ resource "google_compute_firewall" "allow_lb_healthcheck" {
 
   allow {
     protocol = "tcp"
-    ports    = [local.health_check_port]
+    ports    = [local.health_check_port, local.vault_port]
   }
-
-  depends_on = [google_project_service.service]
 }
 
 # Allow external CIDRs to talk to Vault
@@ -62,8 +58,6 @@ resource "google_compute_firewall" "allow_external" {
     protocol = "tcp"
     ports    = [local.vault_port]
   }
-
-  depends_on = [google_project_service.service]
 }
 
 # Allow Vault nodes to talk internally on the Vault ports.
@@ -75,8 +69,7 @@ resource "google_compute_firewall" "allow_internal" {
 
   allow {
     protocol = "tcp"
-    ports    = [local.vault_port]
+    # Cluster comms is on port+1
+    ports = ["${local.vault_port}-${local.vault_port + 1}"]
   }
-
-  depends_on = [google_project_service.service]
 }

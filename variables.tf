@@ -43,11 +43,8 @@ variable "allowed_external_cidrs" {
 # Vault server settings
 #
 
-variable "vault_version" {
-  type    = string
-  default = "1.6.0"
-
-  description = "Version of vault to install. This version must be 1.0+ and must be published on the HashiCorp releases service."
-
+variable "vault_instance_base_image" {
+  type        = string
+  description = "Baked OS image to use for Vault VM"
 }
 

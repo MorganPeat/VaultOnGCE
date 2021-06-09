@@ -30,7 +30,6 @@ data "template_file" "vault_startup_script" {
   template = file("${path.module}/templates/startup.sh.tpl")
 
   vars = {
-    vault_version    = var.vault_version
     vault_port       = local.vault_port
     vault_tls_bucket = google_storage_bucket.tls.name
     config           = data.template_file.vault_config.rendered
@@ -56,7 +55,7 @@ resource "google_compute_instance_template" "vault" {
   }
 
   disk {
-    source_image = local.vault_instance_base_image
+    source_image = var.vault_instance_base_image
     type         = "PERSISTENT"
     disk_type    = "pd-balanced"
     mode         = "READ_WRITE"
@@ -126,8 +125,8 @@ resource "google_compute_region_autoscaler" "vault" {
   target  = google_compute_region_instance_group_manager.vault.self_link
 
   autoscaling_policy {
-    min_replicas    = 1
-    max_replicas    = 2
+    min_replicas    = 2
+    max_replicas    = 3
     cooldown_period = 300
 
     cpu_utilization {
