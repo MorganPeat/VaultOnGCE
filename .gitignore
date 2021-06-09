@@ -35,5 +35,12 @@ override.tf.json
 terraform.rc
 
 ##############################
+
 # SA credentials
 key.json
+
+# Temporary TLS certificates
+ca.crt
+
+# Packer variables
+*.pkrvars.hcl
