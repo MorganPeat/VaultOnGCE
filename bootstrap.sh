@@ -2,9 +2,14 @@
 set -e
 set -o pipefail
 
+# Permission the terraform CLI for Terraform Cloud
 export TERRAFORM_CONFIG="/c/Users/morga/AppData/Roaming/terraform.d/credentials.tfrc.json"
+
+# Show output in color
 green=`tput setaf 2`
 reset=`tput sgr0`
+
+# Create a random(-ish) new project ID
 export PROJECT_ID="vault-on-gcp-${RANDOM}"
 
 
@@ -38,8 +43,13 @@ gcloud iam service-accounts keys create key.json --iam-account="${SA_EMAIL}"
 
 # Authenticate using the SA - it will be used from here
 gcloud auth activate-service-account --key-file=key.json
+# Terraform uses Application Default Credentials which can be picked up using this env var
 export GOOGLE_APPLICATION_CREDENTIALS="$(realpath key.json)"
+
+# Grab an Oath token for the SA so it can be used to authN Terraform Cloud vs GCP APIs
 export GOOGLE_OATH_TOKEN="$(gcloud auth application-default print-access-token)"
+
+
 
 
 echo "${green}**************************************************"
@@ -47,10 +57,10 @@ echo "Bootstrapping the project using terraform"
 echo "**************************************************${reset}"
 
 
-# Get current external IP address - used to ensure limited connectivity to GCP resources
+# Get current external IP address - used to ensure limited connectivity to external-facing GCP resources
 EXTERNAL_IP="$(curl -s http://whatismyip.akamai.com/)"
 
-# Construct the name of the packer image
+# Construct the name of the packer image - means it can be pre-set as a workspace variable by bootsrapper
 IMAGE_NAME="${PROJECT_ID}-${RANDOM}"
 
 # Set terraform variables
@@ -95,11 +105,12 @@ echo "${green}**************************************************"
 echo "Creating the Vault cluster"
 echo "**************************************************${reset}"
 
-# Configure tf cloud backend for vault workspace
+# Configure tf cloud backend for vault workspace - workspace name is unique to this project
 cat > ./vault/backend.hcl <<EOF
 organization = "morgan-peat"
 workspaces { name = "${PROJECT_ID}" }
 EOF
+
 
 pushd vault
 
@@ -108,12 +119,14 @@ terraform apply -auto-approve
 
 LB_ADDRESS="$(terraform output -raw lb_address)"
 LB_PORT="$(terraform output -raw lb_port)"
-echo "export VAULT_CACERT=\"./vault/ca.crt\""
+
+echo "${green}"
+# echo "export VAULT_CACERT=\"./vault/ca.crt\""
 echo "export VAULT_ADDR=\"https://${LB_ADDRESS}:${LB_PORT}\""
 echo "export VAULT_TOKEN="
+echo "${reset}"
 
 popd
-
 
 echo "${green}**************************************************"
 echo "Bootstrap complete!"
