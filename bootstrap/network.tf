@@ -33,7 +33,7 @@ resource "google_compute_firewall" "allow-ssh" {
   name          = "packer-allow-ssh"
   project       = var.project_id
   network       = google_compute_network.packer_network.id
-  source_ranges = var.allowed_external_cidrs
+  source_ranges = [var.allowed_external_cidr]
   target_tags   = ["allow-ssh"]
 
   allow {

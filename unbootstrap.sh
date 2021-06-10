@@ -2,6 +2,16 @@
 set -xe
 set -o pipefail
 
+# Destroy infra
+pushd vault
+terraform destroy -auto-approve || true
+popd
+
+pushd bootstrap
+terraform destroy -auto-approve
+popd
+
+
 # Remove SA credentials
 gcloud auth revoke
 

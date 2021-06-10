@@ -17,7 +17,6 @@ locals {
 }
 
 
-# Ensure GOOGLE_APPLICATION_CREDENTIALS environment variable points to the location of a SA key json file
 provider "google" {
   project = var.project_id
   region  = var.region

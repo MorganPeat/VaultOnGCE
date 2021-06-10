@@ -51,7 +51,7 @@ resource "google_compute_firewall" "allow_external" {
   name          = "vault-allow-external"
   project       = var.project_id
   network       = google_compute_network.vault_network.id
-  source_ranges = var.allowed_external_cidrs
+  source_ranges = [var.allowed_external_cidr]
   target_tags   = ["allow-vault"]
 
   allow {

@@ -24,9 +24,20 @@ variable "project_services" {
   ]
 }
 
-variable "allowed_external_cidrs" {
-  type        = set(string)
-  description = "List of CIDR blocks to allow access to GCP. Since the load balancer is a pass-through load balancer, this must also include all IPs from which you will access Vault. The default is unrestricted (any IP address can access Vault). It is recommended that you reduce this to a smaller list."
+variable "allowed_external_cidr" {
+  type        = string
+  description = "CIDR block to allow access to GCP. Since the load balancer is a pass-through load balancer, this must also include all IPs from which you will access Vault. The default is unrestricted (any IP address can access Vault). It is recommended that you reduce this to a smaller list."
 
-  default = ["0.0.0.0/0"]
+  default = "0.0.0.0/0"
+}
+
+variable "vault_instance_base_image" {
+  type        = string
+  description = "Name of the image to use in Vault VMs"
+}
+
+variable "google_oath_token" {
+  type = string
+  description = "Oauth2 token used by Vault workspace to access google apis"
+  sensitive = true
 }

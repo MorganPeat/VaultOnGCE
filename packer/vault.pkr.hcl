@@ -19,6 +19,10 @@ variable "project_id" {
   type = string
 }
 
+variable "image_name" {
+  type = string
+}
+
 variable "subnetwork" {
   type = string
 }
@@ -32,7 +36,7 @@ variable "vault_version" {
 
 
 source "googlecompute" "vault" {
-  image_name = "vault-{{timestamp}}"
+  image_name = var.image_name
 
   project_id = var.project_id
   zone       = "europe-west1-c"

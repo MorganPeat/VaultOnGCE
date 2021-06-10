@@ -2,6 +2,7 @@
 set -e
 set -o pipefail
 
+export TERRAFORM_CONFIG="/c/Users/morga/AppData/Roaming/terraform.d/credentials.tfrc.json"
 green=`tput setaf 2`
 reset=`tput sgr0`
 export PROJECT_ID="vault-on-gcp-${RANDOM}"
@@ -38,7 +39,7 @@ gcloud iam service-accounts keys create key.json --iam-account="${SA_EMAIL}"
 # Authenticate using the SA - it will be used from here
 gcloud auth activate-service-account --key-file=key.json
 export GOOGLE_APPLICATION_CREDENTIALS="$(realpath key.json)"
-
+export GOOGLE_OATH_TOKEN="$(gcloud auth application-default print-access-token)"
 
 
 echo "${green}**************************************************"
@@ -49,10 +50,16 @@ echo "**************************************************${reset}"
 # Get current external IP address - used to ensure limited connectivity to GCP resources
 EXTERNAL_IP="$(curl -s http://whatismyip.akamai.com/)"
 
+# Construct the name of the packer image
+IMAGE_NAME="${PROJECT_ID}-${RANDOM}"
+
 # Set terraform variables
+# Nasty use of oath token - would love to use vault here :(
 cat > ./bootstrap/terraform.tfvars <<EOF
-project_id             = "${PROJECT_ID}"
-allowed_external_cidrs = ["${EXTERNAL_IP}/32"]
+project_id                = "${PROJECT_ID}"
+allowed_external_cidr     = "${EXTERNAL_IP}/32"
+vault_instance_base_image = "${IMAGE_NAME}"
+google_oath_token         = "${GOOGLE_OATH_TOKEN}"
 EOF
 
 
@@ -74,6 +81,7 @@ echo "**************************************************${reset}"
 cat > ./packer/vault.auto.pkrvars.hcl <<EOF
 project_id = "${PROJECT_ID}"
 subnetwork = "${SUBNETWORK}"
+image_name = "${IMAGE_NAME}"
 EOF
 
 pushd packer
@@ -87,19 +95,15 @@ echo "${green}**************************************************"
 echo "Creating the Vault cluster"
 echo "**************************************************${reset}"
 
-# Get the name of the image created by packer
-IMAGE_NAME="$(gcloud compute images list --filter="name ~ vault" --format="value(name)")"
-
-# Set terraform variables
-cat > ./vault/terraform.tfvars <<EOF
-project_id                = "${PROJECT_ID}"
-allowed_external_cidrs    = ["${EXTERNAL_IP}/32"]
-vault_instance_base_image = "${IMAGE_NAME}"
+# Configure tf cloud backend for vault workspace
+cat > ./vault/backend.hcl <<EOF
+organization = "morgan-peat"
+workspaces { name = "${PROJECT_ID}" }
 EOF
 
 pushd vault
 
-terraform init
+terraform init -backend-config=backend.hcl -migrate-state
 terraform apply -auto-approve
 
 LB_ADDRESS="$(terraform output -raw lb_address)"
