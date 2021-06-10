@@ -18,7 +18,7 @@ Run `./bootstrap.sh` to:
 
 1. Create a Compute Engine Vault cluster using the backed image
 
-## Detroy
+## Destroy
 
 Run `./unbootstrap.sh` to:
 
@@ -26,5 +26,14 @@ Run `./unbootstrap.sh` to:
 
 1. Delete the GCP project
 
+## More details
+
+See each step for further details
+
+1. [Bootstrap](./bootstrap/README.md) which configures the GCP project and sets up the Terraform Cloud workspace
+
+1. [Packer](./packer/README.md) which bakes a VM image with pre-installed Vault
+
+1. [Vault](./vault/README.md) which deploys a OSS Vault cluster on GCP compute engines
 
 ![Vault on GCE](vault-on-gce-full.png "Vault on GCE")

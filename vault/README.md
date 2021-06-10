@@ -36,14 +36,4 @@ Deploys a Vault OSS cluster on GCP Compute Engines
 
 1. Load balancer health check ensures traffic is only sent to the cluster primary VM
 
-## More details
-
-See each step for further details
-
-1. [Bootstrap](./bootstrap/README.md) which configures the GCP project and sets up the Terraform Cloud workspace
-
-1. [Packer](./packer/README.md) which bakes a VM image with pre-installed Vault
-
-1. [Vault](./vault/README.md) which deploys a OSS Vault cluster on GCP compute engines
-
 ![Vault on GCE](../vault-on-gce-vault.png "Vault on GCE")
