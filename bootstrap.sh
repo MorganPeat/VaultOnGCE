@@ -1,10 +1,18 @@
 #! /usr/bin/env bash
-set -xe
+set -e
 set -o pipefail
 
+green=`tput setaf 2`
+reset=`tput sgr0`
 export PROJECT_ID="vault-on-gcp-${RANDOM}"
 
+
+
+
+echo "${green}**************************************************"
 echo "Creating new GCP project ${PROJECT_ID} ..."
+echo "**************************************************${reset}"
+
 gcloud projects create $PROJECT_ID
 gcloud config set project $PROJECT_ID
 
@@ -29,7 +37,13 @@ gcloud iam service-accounts keys create key.json --iam-account="${SA_EMAIL}"
 
 # Authenticate using the SA - it will be used from here
 gcloud auth activate-service-account --key-file=key.json
+export GOOGLE_APPLICATION_CREDENTIALS="$(realpath key.json)"
 
+
+
+echo "${green}**************************************************"
+echo "Bootstrapping the project using terraform"
+echo "**************************************************${reset}"
 
 
 # Get current external IP address - used to ensure limited connectivity to GCP resources
@@ -41,19 +55,20 @@ project_id             = "${PROJECT_ID}"
 allowed_external_cidrs = ["${EXTERNAL_IP}/32"]
 EOF
 
-cat > ./vault/terraform.tfvars <<EOF
-project_id                = "${PROJECT_ID}"
-allowed_external_cidrs    = ["${EXTERNAL_IP}/32"]
-vault_instance_base_image = "insert_image_name_here"
-EOF
 
-
-# Bootstrap the project using terraform
 pushd bootstrap
 terraform init
 terraform apply -auto-approve
 SUBNETWORK="$(terraform output -raw packer_subnetwork)"
 popd
+
+
+
+
+echo "${green}**************************************************"
+echo "Baking Vault image using Packer"
+echo "**************************************************${reset}"
+
 
 # Configure packer parameters
 cat > ./packer/vault.auto.pkrvars.hcl <<EOF
@@ -61,4 +76,42 @@ project_id = "${PROJECT_ID}"
 subnetwork = "${SUBNETWORK}"
 EOF
 
+pushd packer
+packer init .
+packer build .
+popd
+
+
+
+echo "${green}**************************************************"
+echo "Creating the Vault cluster"
+echo "**************************************************${reset}"
+
+# Get the name of the image created by packer
+IMAGE_NAME="$(gcloud compute images list --filter="name ~ vault" --format="value(name)")"
+
+# Set terraform variables
+cat > ./vault/terraform.tfvars <<EOF
+project_id                = "${PROJECT_ID}"
+allowed_external_cidrs    = ["${EXTERNAL_IP}/32"]
+vault_instance_base_image = "${IMAGE_NAME}"
+EOF
+
+pushd vault
+
+terraform init
+terraform apply -auto-approve
+
+LB_ADDRESS="$(terraform output -raw lb_address)"
+LB_PORT="$(terraform output -raw lb_port)"
+echo "export VAULT_CACERT=\"./vault/ca.crt\""
+echo "export VAULT_ADDR=\"https://${LB_ADDRESS}:${LB_PORT}\""
+echo "export VAULT_TOKEN="
+
+popd
+
+
+echo "${green}**************************************************"
 echo "Bootstrap complete!"
+echo "**************************************************${reset}"
+
