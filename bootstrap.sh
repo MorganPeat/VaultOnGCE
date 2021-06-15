@@ -119,9 +119,10 @@ terraform apply -auto-approve
 
 LB_ADDRESS="$(terraform output -raw lb_address)"
 LB_PORT="$(terraform output -raw lb_port)"
+terraform output -raw ca_cert > ca.crt
 
 echo "${green}"
-# echo "export VAULT_CACERT=\"./vault/ca.crt\""
+echo "export VAULT_CACERT=\"./vault/ca.crt\""
 echo "export VAULT_ADDR=\"https://${LB_ADDRESS}:${LB_PORT}\""
 echo "export VAULT_TOKEN="
 echo "${reset}"

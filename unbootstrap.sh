@@ -2,13 +2,16 @@
 set -xe
 set -o pipefail
 
+# Permission the terraform CLI for Terraform Cloud
+export TERRAFORM_CONFIG="/c/Users/morga/AppData/Roaming/terraform.d/credentials.tfrc.json"
+
 # Destroy infra
 pushd vault
 terraform destroy -auto-approve || true
 popd
 
 pushd bootstrap
-terraform destroy -auto-approve
+terraform destroy -auto-approve || true
 popd
 
 
